@@ -37,6 +37,6 @@ Using later versions _should_ not hurt - older ones maybe do.
 
 # What's missing
 
-That's a lot - to make this acutally useful at least Rust friendly wrappers for all the libraries are needed. Probably a bit more work since the FreeRTOS stuff is based a lot on macros and will require a C shim. There is a crate for that which apparently needs a more recent version of FreeRTOS than what is contained in the SDK.
+That's a lot - to make this actually useful at least Rust friendly wrappers for all the libraries are needed. Probably a bit more work since the FreeRTOS stuff is based a lot on macros and will require a C shim. There is a crate for that which apparently needs a more recent version of FreeRTOS than what is contained in the SDK.
 
 Also the build process needs some improvements.
