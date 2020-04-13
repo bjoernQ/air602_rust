@@ -1,0 +1,10 @@
+[package]
+name = "air_602_try_rust"
+version = "0.0.1"
+authors = ["Bjoern Quentin <bjoern.quentin@mobile-j.de>"]
+description = "Does nothing"
+keywords = ["air602","m600"]
+categories = ["embedded", "no-std"]
+license = "MIT OR Apache-2.0"
+edition = "2018"
+

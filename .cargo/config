@@ -1,0 +1,32 @@
+[target.thumbv7m-none-eabi]
+linker = "arm-none-eabi-gcc"
+
+rustflags = [
+  "-C", "link-arg=-Wl,--gc-sections",
+  "-C", "link-arg=-Wl,--start-group",
+  "-C", "link-arg=-lgcc",
+  "-C", "link-arg=-lm",
+  "-C", "link-arg=-lc",
+  "-C", "link-arg=./air602/lib/misc.o",
+  "-C", "link-arg=./air602/lib/retarget.o",
+  "-C", "link-arg=./air602/lib/startup.o",
+  "-C", "link-arg=./air602/lib/libuser.a",
+  "-C", "link-arg=./air602/lib/libwlan.a",
+  "-C", "link-arg=./air602/lib/libairkiss_log.a",
+  "-C", "link-arg=./air602/lib/libcommon.a",
+  "-C", "link-arg=./air602/lib/libdrivers.a",
+  "-C", "link-arg=./air602/lib/libsys.a",
+  "-C", "link-arg=./air602/lib/libnetwork.a",
+  "-C", "link-arg=./air602/lib/libos.a",
+  "-C", "link-arg=./air602/lib/libapp.a",
+  "-C", "link-arg=-T./memory.x",
+  "-C", "link-arg=-Wl,-warn-common",
+  "-C", "link-arg=-Wl,--end-group",
+  "-C", "link-arg=-static",
+  "-C", "link-arg=-nostartfiles",
+  "-C", "link-arg=-mthumb",
+  "-C", "link-arg=-mcpu=cortex-m3"
+]
+
+[build]
+target = "thumbv7m-none-eabi"

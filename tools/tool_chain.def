@@ -1,0 +1,135 @@
+
+TARGET ?= w600
+
+ODIR := .output
+OBJODIR := $(ODIR)/$(TARGET)/obj
+LIBODIR := $(ODIR)/$(TARGET)/lib
+IMAGEODIR := $(ODIR)/$(TARGET)/image
+BINODIR := $(ODIR)/$(TARGET)/bin
+FIRMWAREDIR := $(TOP_DIR)/bin
+SDK_TOOLS := $(TOP_DIR)/tools
+
+DL_TOOL ?= $(SDK_TOOLS)/wm_tools.exe
+DL_PORT ?= COM1
+DL_BAUD ?= 2000000
+
+COMPILE ?= gcc
+
+FLASH_SIZE ?= 1M
+
+ifeq ($(COMPILE), gcc)
+COMPILE = gcc
+else
+COMPILE = armcc
+endif
+
+# YES; NO
+VERBOSE ?= NO   
+
+CROSS_MAKE := make
+
+# select which tools to use as compiler, librarian and linker
+ifeq ($(COMPILE), gcc)
+	ifeq ($(VERBOSE),YES)
+		AR = arm-none-eabi-ar
+		ASM = arm-none-eabi-gcc
+		CC = arm-none-eabi-gcc
+		CPP = arm-none-eabi-c++
+		LINK = arm-none-eabi-ld.exe
+		OBJCOPY = arm-none-eabi-objcopy
+		OBJDUMP = arm-none-eabi-objdump
+	else
+		AR = @echo "GNU-AR $<"; arm-none-eabi-ar
+		ASM = @echo "GNU-ASM $<"; arm-none-eabi-gcc
+		CC = @echo "GNU-CC  $<"; arm-none-eabi-gcc
+		CPP = @echo "GNU-CPP $<"; arm-none-eabi-c++
+		LINK = @echo "GNU-LINK $<"; arm-none-eabi-ld.exe
+		OBJCOPY = @echo "GNU-OBJCOPY $<"; arm-none-eabi-objcopy
+		OBJDUMP = @echo "GNU-OBJDUMP $<"; arm-none-eabi-objdump
+	endif
+else
+	KEIL_PATH =  /cygdrive/d/Keil_V5/ARM
+	INC = -I $(KEIL_PATH)/CMSIS/Include -I $(KEIL_PATH)/RV31/INC
+	ifeq ($(VERBOSE),YES)
+		AR = $(KEIL_PATH)/ARMCC/bin/armar
+		ASM = $(KEIL_PATH)/ARMCC/bin/armasm
+		CC = $(KEIL_PATH)/ARMCC/bin/armcc
+		CPP = $(KEIL_PATH)/ARMCC/bin/armcc
+		LINK = $(KEIL_PATH)/ARMCC/bin/armlink
+		FROMELF = $(KEIL_PATH)/ARMCC/bin/fromelf
+	else
+		AR = @echo "ARM-AR $<"; $(KEIL_PATH)/ARMCC/bin/armar
+		ASM = @echo "ARM-ASM $<"; $(KEIL_PATH)/ARMCC/bin/armasm
+		CC = @echo "ARM-CC $<"; $(KEIL_PATH)/ARMCC/bin/armcc
+		CPP = @echo "ARM-CPP $<"; $(KEIL_PATH)/ARMCC/bin/armcc
+		LINK = @echo "ARM-LINK $<"; $(KEIL_PATH)/ARMCC/bin/armlink
+		FROMELF = @echo "ARM-FROMELF $<"; $(KEIL_PATH)/ARMCC/bin/fromelf
+	endif
+endif
+
+LDDIR = $(TOP_DIR)/ld
+ifeq ($(FLASH_SIZE), 2M)
+	ifeq ($(COMPILE), gcc)
+		LD_FILE = $(LDDIR)/w600_2m.ld
+	else
+		LD_FILE = $(LDDIR)/w600_2m.sct
+	endif
+else
+	ifeq ($(COMPILE), gcc)
+		LD_FILE = $(LDDIR)/w600_1m.ld
+	else
+		LD_FILE = $(LDDIR)/w600_1m.sct
+	endif
+endif
+
+ifeq ($(COMPILE), gcc)
+	LIB_EXT = .a
+	CCFLAGS := -Wall \
+		-DGCC_COMPILE=1 \
+		-mthumb \
+		-Os \
+		--function-sections \
+		--data-sections \
+		-mcpu=cortex-m3 \
+		-std=gnu99 \
+		-march=armv7-m \
+		-mabi=aapcs \
+		-fno-builtin
+	
+	ASMFLAGS := -Wall \
+		-mthumb-interwork \
+		-mthumb \
+		-std=gnu99 \
+		-mcpu=cortex-m3 \
+		-march=armv7-m \
+		-mabi=aapcs \
+		-fno-builtin \
+		-Os
+	
+	ARFLAGS := ru
+#		-Wall	\
+#		-mcpu=cortex-m3	\
+#		-std=gnu99
+
+	ARFLAGS_2 = xo
+	
+	LINKFLAGS := -static	\
+		-nostartfiles	\
+		-mthumb	\
+		-mcpu=cortex-m3	
+	MAP := -Wl,-Map,$(IMAGEODIR)/$(TARGET).map
+	INFO := 
+	LIST := 
+	
+else
+	LIB_EXT = .lib
+	CCFLAGS +=  -c --cpu Cortex-M3 -D__MICROLIB --li -g -W -O2 --apcs=interwork  --split_sections --c99 --gnu -DWM_W600
+	CMACRO :=
+	ASMFLAGS := --cpu Cortex-M3 --li -g --apcs=interwork --pd "__MICROLIB SETA 1"
+	LINKFLAGS := --cpu Cortex-M3 
+	MAP := --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols   
+	INFO := --info sizes --info totals --info unused --info veneers
+	LIST := --list $(IMAGEODIR)/$(TARGET).map
+	ARFLAGS := -ru
+	ARFLAGS_2 := -x
+endif
